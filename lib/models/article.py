@@ -17,7 +17,6 @@ class Article:
         )
 
     @classmethod
-    #Creating the articles table
     def create_table(cls):
         sql = """
             CREATE TABLE IF NOT EXISTS articles (
@@ -33,7 +32,6 @@ class Article:
         CONN.commit()
 
     @classmethod
-    #Deleting the articles table
     def drop_table(cls):
         sql = """
             DROP TABLE IF EXISTS articles;
@@ -41,7 +39,6 @@ class Article:
         CURSOR.execute(sql)
         CONN.commit()
 
-    #Inserting a new row into the articles table
     def save(self):
         sql = """
             INSERT INTO articles (title, author_id, magazine_id)
@@ -52,13 +49,11 @@ class Article:
 
         self.article_id = CURSOR.lastrowid
         
-        #Adds the article instance to the dictionary
+    
         type(self).all[self.article_id] = self
 
     @classmethod
     def instance_from_db(cls, row):
-
-        #Checking for exitsing article instance using the row id
         article = cls.all.get(row[0])
 
         if article:
