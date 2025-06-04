@@ -1,6 +1,10 @@
 from lib.db.connection import get_connection
 
 class Author:
+    # Class attributes for database metadata
+    table_name = "authors"
+    columns = ["id", "name"]
+
     def __init__(self, id, name):
         self.id = id
         self.name = name
@@ -9,7 +13,10 @@ class Author:
     def create(cls, name):
         conn = get_connection()
         cursor = conn.cursor()
-        cursor.execute("INSERT INTO authors (name) VALUES (?)", (name,))
+        cursor.execute(
+            f"INSERT INTO {cls.table_name} (name) VALUES (?)",
+            (name,)
+        )
         conn.commit()
         author_id = cursor.lastrowid
         conn.close()
@@ -19,7 +26,10 @@ class Author:
     def find_by_id(cls, id):
         conn = get_connection()
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM authors WHERE id = ?", (id,))
+        cursor.execute(
+            f"SELECT * FROM {cls.table_name} WHERE id = ?",
+            (id,)
+        )
         row = cursor.fetchone()
         conn.close()
         if row:
@@ -31,7 +41,6 @@ class Author:
         return Article.find_by_author(self.id)
 
     def magazines(self):
-
         articles = self.articles()
         magazines = {article.magazine() for article in articles}
         return list(magazines)

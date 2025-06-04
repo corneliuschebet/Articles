@@ -1,6 +1,10 @@
 from lib.db.connection import get_connection
 
 class Article:
+    # Class attributes that reflect the table and columns
+    table_name = "articles"
+    columns = ["id", "title", "author_id", "magazine_id"]
+
     def __init__(self, id, title, author_id, magazine_id):
         self.id = id
         self.title = title
@@ -12,7 +16,7 @@ class Article:
         conn = get_connection()
         cursor = conn.cursor()
         cursor.execute(
-            "INSERT INTO articles (title, author_id, magazine_id) VALUES (?, ?, ?)",
+            f"INSERT INTO {cls.table_name} (title, author_id, magazine_id) VALUES (?, ?, ?)",
             (title, author_id, magazine_id)
         )
         conn.commit()
@@ -24,7 +28,7 @@ class Article:
     def find_by_author(cls, author_id):
         conn = get_connection()
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM articles WHERE author_id = ?", (author_id,))
+        cursor.execute(f"SELECT * FROM {cls.table_name} WHERE author_id = ?", (author_id,))
         rows = cursor.fetchall()
         conn.close()
         return [cls(row["id"], row["title"], row["author_id"], row["magazine_id"]) for row in rows]

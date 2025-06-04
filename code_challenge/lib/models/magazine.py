@@ -3,6 +3,10 @@ from lib.models.author import Author
 from collections import Counter
 
 class Magazine:
+    # Class attributes to reflect the DB table and columns
+    table_name = "magazines"
+    columns = ["id", "name", "category"]
+
     def __init__(self, id, name, category):
         self.id = id
         self.name = name
@@ -13,7 +17,7 @@ class Magazine:
         conn = get_connection()
         cursor = conn.cursor()
         cursor.execute(
-            "INSERT INTO magazines (name, category) VALUES (?, ?)",
+            f"INSERT INTO {cls.table_name} (name, category) VALUES (?, ?)",
             (name, category)
         )
         conn.commit()
@@ -25,7 +29,10 @@ class Magazine:
     def find_by_id(cls, id):
         conn = get_connection()
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM magazines WHERE id = ?", (id,))
+        cursor.execute(
+            f"SELECT * FROM {cls.table_name} WHERE id = ?",
+            (id,)
+        )
         row = cursor.fetchone()
         conn.close()
         if row:
