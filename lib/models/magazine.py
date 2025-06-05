@@ -1,7 +1,4 @@
 from db.connection import CONN, CURSOR
-# Avoid circular imports at top-level
-# from lib.models.author import Author
-# from lib.models.article import Article
 
 class Magazine:
     def __init__(self, magazine_id, name, category):
@@ -9,15 +6,26 @@ class Magazine:
         self.name = name
         self.category = category
 
+    def save(self):
+        if self.id is None:
+            CURSOR.execute(
+                "INSERT INTO magazines (name, category) VALUES (?, ?)",
+                (self.name, self.category)
+            )
+            CONN.commit()
+            self.id = CURSOR.lastrowid
+        else:
+            CURSOR.execute(
+                "UPDATE magazines SET name = ?, category = ? WHERE magazine_id = ?",
+                (self.name, self.category, self.id)
+            )
+            CONN.commit()
+
     @classmethod
     def create(cls, name, category):
-        CURSOR.execute(
-            "INSERT INTO magazines (name, category) VALUES (?, ?)",
-            (name, category)
-        )
-        CONN.commit()
-        magazine_id = CURSOR.lastrowid
-        return cls(magazine_id, name, category)
+        mag = cls(None, name, category)
+        mag.save()
+        return mag
 
     @classmethod
     def find_by_name(cls, name):
@@ -34,6 +42,7 @@ class Magazine:
         return [cls(row["magazine_id"], row["name"], row["category"]) for row in rows]
 
     def contributors(self):
+        # unique authors who wrote articles for this magazine
         from lib.models.author import Author
         query = """
             SELECT DISTINCT au.author_id, au.name, au.email, au.bio
@@ -43,7 +52,7 @@ class Magazine:
         """
         CURSOR.execute(query, (self.id,))
         rows = CURSOR.fetchall()
-        return [Author(row["author_id"], row["name"], row["email"], row["bio"]) for row in rows]
+        return [Author(row["name"], row["email"], row["bio"], row["author_id"]) for row in rows]
 
     def article_titles(self):
         CURSOR.execute("SELECT title FROM articles WHERE magazine_id = ?", (self.id,))
@@ -51,11 +60,12 @@ class Magazine:
         return [row["title"] for row in rows]
 
     def contributing_authors(self):
-        # Alias for contributors for test compatibility
+        # Alias for contributors (if test expects)
         return self.contributors()
 
     @classmethod
     def with_multiple_authors(cls):
+        # Magazines with > 1 unique author
         query = """
             SELECT m.magazine_id, m.name, m.category
             FROM magazines m
@@ -66,15 +76,3 @@ class Magazine:
         CURSOR.execute(query)
         rows = CURSOR.fetchall()
         return [cls(row["magazine_id"], row["name"], row["category"]) for row in rows]
-
-    @classmethod
-    def article_counts(cls):
-        query = """
-            SELECT m.name, COUNT(a.article_id) AS article_count
-            FROM magazines m
-            LEFT JOIN articles a ON m.magazine_id = a.magazine_id
-            GROUP BY m.magazine_id
-        """
-        CURSOR.execute(query)
-        # Return list of dicts with keys "name" and "article_count"
-        return CURSOR.fetchall()

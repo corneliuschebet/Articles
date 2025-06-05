@@ -1,7 +1,4 @@
 from db.connection import CONN, CURSOR
-# Avoid circular imports at top level
-# from lib.models.author import Author
-# from lib.models.magazine import Magazine
 
 class Article:
     def __init__(self, article_id, title, content, author_id, magazine_id):
@@ -13,7 +10,6 @@ class Article:
 
     @classmethod
     def create(cls, title, author, magazine, content=""):
-        # author and magazine are instances of Author and Magazine
         CURSOR.execute(
             "INSERT INTO articles (title, author_id, magazine_id, content) VALUES (?, ?, ?, ?)",
             (title, author.id, magazine.id, content)
